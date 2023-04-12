@@ -61,7 +61,7 @@ const logout = () => {
               <div class="ml-3 relative">
                 <!-- Teams Dropdown -->
                 <Dropdown
-                  v-if="$page.props.jetstream.hasTeamFeatures"
+                  v-if="$page.props.jetstream.hasTeamFeatures && $page.props.auth.user?.permissions.canUseTeamFeatures"
                   align="right"
                   width="60"
                 >
@@ -94,7 +94,7 @@ const logout = () => {
                   <template #content>
                     <div class="w-60">
                       <!-- Team Management -->
-                      <template v-if="$page.props.jetstream.hasTeamFeatures">
+                      <template v-if="$page.props.jetstream.hasTeamFeatures && $page.props.auth.user?.permissions.canUseTeamFeatures">
                         <div class="block px-4 py-2 text-xs text-gray-400">
                           Manage Team
                         </div>
@@ -204,12 +204,15 @@ const logout = () => {
                       Manage Account
                     </div>
 
-                    <DropdownLink :href="route('profile.show')">
+                    <DropdownLink
+                      v-if="$page.props.auth.user?.permissions.canViewProfile"
+                      :href="route('profile.show')"
+                    >
                       Profile
                     </DropdownLink>
 
                     <DropdownLink
-                      v-if="$page.props.jetstream.hasApiFeatures"
+                      v-if="$page.props.jetstream.hasApiFeatures && $page.props.auth.user?.permissions.canUseApiFeatures"
                       :href="route('api-tokens.index')"
                     >
                       API Tokens
@@ -300,6 +303,7 @@ const logout = () => {
 
             <div class="mt-3 space-y-1">
               <ResponsiveNavLink
+                v-if="$page.props.auth.user?.permissions.canViewProfile"
                 :href="route('profile.show')"
                 :active="route().current('profile.show')"
               >
@@ -307,7 +311,7 @@ const logout = () => {
               </ResponsiveNavLink>
 
               <ResponsiveNavLink
-                v-if="$page.props.jetstream.hasApiFeatures"
+                v-if="$page.props.jetstream.hasApiFeatures && $page.props.auth.user?.permissions.canUseApiFeatures"
                 :href="route('api-tokens.index')"
                 :active="route().current('api-tokens.index')"
               >
@@ -325,7 +329,7 @@ const logout = () => {
               </form>
 
               <!-- Team Management -->
-              <template v-if="$page.props.jetstream.hasTeamFeatures">
+              <template v-if="$page.props.jetstream.hasTeamFeatures && $page.props.auth.user?.permissions.canUseTeamFeatures">
                 <div class="border-t border-gray-200 dark:border-gray-600" />
 
                 <div class="block px-4 py-2 text-xs text-gray-400">

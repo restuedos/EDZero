@@ -96,6 +96,7 @@ const clearPhotoFileInput = () => {
           ref="photoInput"
           type="file"
           class="hidden"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
           @change="updatePhotoPreview"
         >
 
@@ -130,6 +131,7 @@ const clearPhotoFileInput = () => {
         <SecondaryButton
           class="mt-2 mr-2"
           type="button"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
           @click.prevent="selectNewPhoto"
         >
           Select A New Photo
@@ -139,6 +141,7 @@ const clearPhotoFileInput = () => {
           v-if="user.profile_photo_path"
           type="button"
           class="mt-2"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
           @click.prevent="deletePhoto"
         >
           Remove Photo
@@ -162,6 +165,7 @@ const clearPhotoFileInput = () => {
           type="text"
           class="mt-1 block w-full"
           autocomplete="name"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
         />
         <InputError
           :message="form.errors.name"
@@ -180,7 +184,8 @@ const clearPhotoFileInput = () => {
           v-model="form.email"
           type="email"
           class="mt-1 block w-full"
-          autocomplete="username"
+          autocomplete="email"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
         />
         <InputError
           :message="form.errors.email"
@@ -196,6 +201,7 @@ const clearPhotoFileInput = () => {
               method="post"
               as="button"
               class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+              :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
               @click.prevent="sendEmailVerification"
             >
               Click here to re-send the verification email.
@@ -210,6 +216,7 @@ const clearPhotoFileInput = () => {
           </div>
         </div>
       </div>
+    </template>
 
     <template #actions>
       <ActionMessage
@@ -219,9 +226,16 @@ const clearPhotoFileInput = () => {
         Saved.
       </ActionMessage>
 
+      <ActionMessage
+        :on="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
+        class="mr-3"
+      >
+        You cannot update profile information.
+      </ActionMessage>
+
       <PrimaryButton
-        :class="{ 'opacity-25': form.processing }"
-        :disabled="form.processing"
+        :class="{ 'opacity-25': form.processing || !$page.props.auth.user?.permissions.canUpdateProfileInformation }"
+        :disabled="form.processing || !$page.props.auth.user?.permissions.canUpdateProfileInformation"
       >
         Save
       </PrimaryButton>

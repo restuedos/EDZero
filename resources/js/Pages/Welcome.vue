@@ -12,7 +12,10 @@ defineProps({
 <template>
   <Head title="Welcome" />
 
-  <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
+  <div
+    v-if="!$page.props.auth.user || $page.props.auth.user?.permissions.canViewWelcome"
+    class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white"
+  >
     <div
       v-if="canLogin"
       class="sm:fixed sm:top-0 sm:right-0 p-6 text-right"
@@ -275,6 +278,22 @@ defineProps({
 
         <div class="ml-4 text-center text-sm text-gray-500 dark:text-gray-400 sm:text-right sm:ml-0">
           Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    v-else
+    class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center sm:pt-0"
+  >
+    <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
+      <div class="flex items-center pt-8 sm:justify-start sm:pt-0">
+        <div class="px-4 text-lg text-gray-500 border-r border-gray-400 tracking-wider">
+          You cannot view this page
+        </div>
+        <div class="ml-4 text-lg font-extrabold text-gray-500 hover:text-gray-300 tracking-wider">
+          <a :href="route('login')">Login</a>
         </div>
       </div>
     </div>

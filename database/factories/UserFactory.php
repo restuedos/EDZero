@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Laravel\Jetstream\Features;
+use Spatie\Permission\Models\Role;
 
 class UserFactory extends Factory
 {
@@ -26,8 +27,11 @@ class UserFactory extends Factory
     {
         return [
             'name' => $this->faker->name(),
+            'username' => $this->faker->unique()->userName(),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'phone' => $this->faker->unique()->phoneNumber(),
+            'phone_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
@@ -67,6 +71,21 @@ class UserFactory extends Factory
                 ])
                 ->when(is_callable($callback), $callback),
             'ownedTeams'
+        );
+    }
+
+    /**
+     * Indicate that the user should have a role.
+     */
+    public function withRoles(callable $callback = null): static
+    {
+        return $this->has(
+            Role::factory()
+                ->state(fn (array $attributes, User $user) => [
+                    'name' => $user->name.'\'s Role'
+                ])
+                ->when(is_callable($callback), $callback),
+            'role'
         );
     }
 }
