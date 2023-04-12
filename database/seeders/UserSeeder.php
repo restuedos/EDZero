@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
         $users = collect([
             [
                 "name"              => "Restu Edo Setiaji",
+                "username"          => "EDZero",
                 "email"             => "restuedosetiaji@gmail.com",
                 "email_verified_at" => Carbon::now(),
                 "password"          => Hash::make("Edo998877!"),
@@ -27,6 +28,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "name"              => "Super Admin",
+                "username"          => "super_admin",
                 "email"             => "superadmin@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
                 "password"          => Hash::make("superadmin"),
@@ -34,6 +36,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "name"              => "Admin",
+                "username"          => "admin",
                 "email"             => "admin@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
                 "password"          => Hash::make("admin"),
@@ -41,6 +44,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "name"              => "Demo",
+                "username"          => "demo",
                 "email"             => "demo@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
                 "password"          => Hash::make("demo"),
@@ -48,6 +52,7 @@ class UserSeeder extends Seeder
             ],
             [
                 "name"              => "Guest",
+                "username"          => "guest",
                 "email"             => "guest@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
                 "password"          => Hash::make("guest"),
@@ -63,7 +68,7 @@ class UserSeeder extends Seeder
 
                 $role = $user['role'];
                 $newUser = User::firstOrCreate(
-                    (clone $user)->only('email')->toArray(),
+                    (clone $user)->only(['email', 'username'])->toArray(),
                     (clone $user)->except('role')->toArray()
                 );
                 $newUser->assignRole($role);

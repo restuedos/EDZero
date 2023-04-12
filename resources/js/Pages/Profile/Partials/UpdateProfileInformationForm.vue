@@ -17,6 +17,7 @@ const form = useForm({
     _method: 'PUT',
     name: props.user.name,
     email: props.user.email,
+    username: props.user.username,
     photo: null,
 });
 
@@ -217,6 +218,26 @@ const clearPhotoFileInput = () => {
         </div>
       </div>
     </template>
+
+      <!-- Username -->
+      <div class="col-span-6 sm:col-span-4">
+        <InputLabel
+          for="username"
+          value="Username"
+        />
+        <TextInput
+          id="username"
+          v-model="form.username"
+          type="text"
+          class="mt-1 block w-full"
+          autocomplete="username"
+          :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
+        />
+        <InputError
+          :message="form.errors.username"
+          class="mt-2"
+        />
+      </div>
 
     <template #actions>
       <ActionMessage
