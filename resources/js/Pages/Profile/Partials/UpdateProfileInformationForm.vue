@@ -18,6 +18,7 @@ const form = useForm({
     name: props.user.name,
     email: props.user.email,
     username: props.user.username,
+    phone: props.user.phone,
     photo: null,
 });
 
@@ -238,6 +239,30 @@ const clearPhotoFileInput = () => {
           class="mt-2"
         />
       </div>
+
+      <!-- Phone -->
+      <div class="form-control col-span-6 sm:col-span-4">
+        <InputLabel
+          for="phone"
+          value="Phone"
+          class="label"
+        />
+        <label class="input-group">
+          <span>+62</span>
+          <TextInput
+            id="phone"
+            v-model="form.phone"
+            type="tel"
+            class="input input-bordered mt-1 block w-full"
+            autocomplete="phone"
+          />
+        </label>
+        <InputError
+          :message="form.errors.phone"
+          class="mt-2"
+        />
+      </div>
+    </template>
 
     <template #actions>
       <ActionMessage

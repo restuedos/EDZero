@@ -15,6 +15,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('username')->unique()->after('name');
+            $table->string('phone')->unique()->after('email');
+            $table->timestamp('phone_verified_at')->nullable()->after('phone');
         });
     }
 
@@ -28,6 +30,8 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'username',
+                'phone',
+                'phone_verified_at',
             ]);
         });
     }

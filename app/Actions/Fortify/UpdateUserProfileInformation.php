@@ -22,6 +22,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['required', 'digits_between:11,12', Rule::unique('users')->ignore($user->id)],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ])->validateWithBag('updateProfileInformation');
 
@@ -35,7 +36,9 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         } else {
             $user->forceFill([
                 'name' => $input['name'],
+                'username' => $input['username'],
                 'email' => $input['email'],
+                'phone' => $input['phone'],
             ])->save();
         }
     }
@@ -49,10 +52,20 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     {
         $user->forceFill([
             'name' => $input['name'],
+            'username' => $input['username'],
+            'phone' => $input['phone'],
+            'phone_verified_at' => $this->phoneVerifiedAt($user, $input),
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();
 
         $user->sendEmailVerificationNotification();
+    }
+
+    private function phoneVerifiedAt(User $user, array $input) {
+        if ($input['phone'] !== $user->phone) {
+            return null;
+        }
+        return $user->phone_verified_at;
     }
 }

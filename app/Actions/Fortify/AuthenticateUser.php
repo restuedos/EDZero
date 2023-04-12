@@ -11,17 +11,26 @@ use App\Fortify\Fortifier as Fortify;
 
 class AuthenticateUser
 {
+    protected $identity;
+
+    public function __construct()
+    {
+        $this->identity = Fortify::identity();
+    }
+
     public function __invoke(Request $request)
     {
-        $user = User::where($this->identity($request), $request->username)->first();
+        $user = User::where($this->identity($request), $this->format($request))->first();
         if ($user && Hash::check($request->password, $user->password)) {
             return $user;
         }
     }
 
     private function identity($request) {
-        if ($this->validEmail($request->username)) {
+        if ($this->validEmail($request->{$this->identity})) {
             $identity = Fortify::email();
+        } else if ($this->validPhone($request->{$this->identity})) {
+            $identity = Fortify::phone();
         } else {
             $identity = Fortify::username();
         }
@@ -32,5 +41,20 @@ class AuthenticateUser
         return Validator::make(['email' => $email], [
             'email' => 'required|email|max:255'
         ])->passes();
+    }
+
+    private function validPhone($phone) {
+        return Validator::make(['phone' => $phone], [
+            'phone' => ['required', 'regex:/\+?([ -]?\d+)+|\(\d+\)([ -]\d+)/', 'starts_with:8,08,+62,62']
+        ])->passes();
+    }
+
+    private function format($request) {
+        return $this->identity($request) == 'phone' ? $this->formatPhone($request->{$this->identity}) : $request->{$this->identity};
+    }
+
+    private function formatPhone($phone) {
+        $phone = Str::remove([' ', '-', '(', ')'], $phone);
+        return substr($phone, strpos($phone, '8'));
     }
 }

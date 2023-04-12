@@ -23,6 +23,8 @@ class UserSeeder extends Seeder
                 "username"          => "EDZero",
                 "email"             => "restuedosetiaji@gmail.com",
                 "email_verified_at" => Carbon::now(),
+                "phone"             => "895341028697",
+                "phone_verified_at" => Carbon::now(),
                 "password"          => Hash::make("Edo998877!"),
                 "role"              => 'super_admin',
             ],
@@ -31,6 +33,8 @@ class UserSeeder extends Seeder
                 "username"          => "super_admin",
                 "email"             => "superadmin@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
+                "phone"             => "81234567890",
+                "phone_verified_at" => Carbon::now(),
                 "password"          => Hash::make("superadmin"),
                 "role"              => 'super_admin',
             ],
@@ -39,6 +43,8 @@ class UserSeeder extends Seeder
                 "username"          => "admin",
                 "email"             => "admin@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
+                "phone"             => "81234567891",
+                "phone_verified_at" => Carbon::now(),
                 "password"          => Hash::make("admin"),
                 "role"              => 'admin',
             ],
@@ -47,6 +53,8 @@ class UserSeeder extends Seeder
                 "username"          => "demo",
                 "email"             => "demo@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
+                "phone"             => "81234567892",
+                "phone_verified_at" => Carbon::now(),
                 "password"          => Hash::make("demo"),
                 "role"              => 'demo',
             ],
@@ -55,6 +63,8 @@ class UserSeeder extends Seeder
                 "username"          => "guest",
                 "email"             => "guest@edzero.co.id",
                 "email_verified_at" => Carbon::now(),
+                "phone"             => "81234567893",
+                "phone_verified_at" => Carbon::now(),
                 "password"          => Hash::make("guest"),
                 "role"              => 'guest',
             ]
@@ -68,7 +78,7 @@ class UserSeeder extends Seeder
 
                 $role = $user['role'];
                 $newUser = User::firstOrCreate(
-                    (clone $user)->only(['email', 'username'])->toArray(),
+                    (clone $user)->only(['email', 'username', 'phone'])->toArray(),
                     (clone $user)->except('role')->toArray()
                 );
                 $newUser->assignRole($role);

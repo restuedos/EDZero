@@ -48,7 +48,7 @@ const submit = () => {
       <div>
         <InputLabel
           for="username"
-          value="Email/Username"
+          value="Email/Phone/Username"
         />
         <TextInput
           id="username"
