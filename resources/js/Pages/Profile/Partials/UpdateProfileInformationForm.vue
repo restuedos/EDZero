@@ -5,9 +5,11 @@ import ActionMessage from '@/Components/ActionMessage.vue';
 import FormSection from '@/Components/FormSection.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import Badge from '@/Components/Badge.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import OTPInput from '@/Components/OTPInput.vue';
 
 const props = defineProps({
     user: Object,
@@ -19,10 +21,21 @@ const form = useForm({
     email: props.user.email,
     username: props.user.username,
     phone: props.user.phone,
+    otp: null,
     photo: null,
 });
 
+const rateLimit = ref({
+  otp: false
+});
+
 const verificationLinkSent = ref(null);
+const verificationOTPSent = ref(null);
+const otpRetry = ref(null);
+const otpExpired = ref(null);
+const timer = ref(null);
+const otpInput = ref(null);
+const countdown = ref(null);
 const photoPreview = ref(null);
 const photoInput = ref(null);
 
@@ -34,13 +47,70 @@ const updateProfileInformation = () => {
     form.post(route('user-profile-information.update'), {
         errorBag: 'updateProfileInformation',
         preserveScroll: true,
-        onSuccess: () => clearPhotoFileInput(),
+        onSuccess: () => {
+          clearPhotoFileInput();
+          clearOTPInput();
+        },
     });
 };
 
 const sendEmailVerification = () => {
     verificationLinkSent.value = true;
 };
+
+const sendPhoneVerification = () => {
+    verificationOTPSent.value = true;
+    otpExpired.value = false;
+    otpRetry.value++;
+
+    switch (otpRetry.value) {
+      case 1:
+        timer.value = 60;
+        break;
+      case 2:
+        timer.value = 120;
+        break;
+      case 3:
+        timer.value = 300;
+        break;
+      default:
+        break;
+    }
+    requestOTP();
+
+    if (otpRetry.value > 3) {
+      rateLimit.value.otp = true;
+    }
+    startCountdown();
+};
+
+const requestOTP = () => {
+    router.post(route('verification.phone.send'), {}, {
+        headers: {
+            'Accept': '*/*',
+            'Content-Type': 'application/json',
+        },
+        preserveScroll: true,
+        onError: (errors) => {
+            console.log(errors);
+        },
+    });
+};
+
+const startCountdown = () => {
+  let count = timer.value;
+  let interval = setInterval(() => {
+    if (count === 0) {
+      otpExpired.value = true;
+      clearInterval(interval);
+    } else {
+      if (countdown?.value) {
+        countdown.value.innerText = count;
+      }
+      count--;
+    }
+  }, 1000)
+}
 
 const selectNewPhoto = () => {
     photoInput.value.click();
@@ -75,6 +145,12 @@ const clearPhotoFileInput = () => {
         photoInput.value.value = null;
     }
 };
+
+const clearOTPInput = () => {
+    if (form.otp !== null) {
+        form.otp = null;
+    }
+};
 </script>
 
 <template>
@@ -95,6 +171,7 @@ const clearPhotoFileInput = () => {
       >
         <!-- Profile Photo File Input -->
         <input
+          id="photo"
           ref="photoInput"
           type="file"
           class="hidden"
@@ -177,10 +254,22 @@ const clearPhotoFileInput = () => {
 
       <!-- Email -->
       <div class="col-span-6 sm:col-span-4">
-        <InputLabel
-          for="email"
-          value="Email"
-        />
+        <div class="flex items-center">
+          <InputLabel
+            for="email"
+            value="Email"
+          />
+          <Badge
+            v-if="$page.props.jetstream.hasEmailVerification && user.email_verified_at !== null"
+            class="ml-2 badge-success"
+            value="Verified"
+          />
+          <Badge
+            v-else-if="$page.props.jetstream.hasEmailVerification && user.email_verified_at === null"
+            class="ml-2 badge-warning"
+            value="Unverified"
+          />
+        </div>
         <TextInput
           id="email"
           v-model="form.email"
@@ -218,7 +307,6 @@ const clearPhotoFileInput = () => {
           </div>
         </div>
       </div>
-    </template>
 
       <!-- Username -->
       <div class="col-span-6 sm:col-span-4">
@@ -242,25 +330,97 @@ const clearPhotoFileInput = () => {
 
       <!-- Phone -->
       <div class="form-control col-span-6 sm:col-span-4">
-        <InputLabel
-          for="phone"
-          value="Phone"
-          class="label"
-        />
-        <label class="input-group">
-          <span>+62</span>
+        <div class="flex items-center">
+          <InputLabel
+            for="phone"
+            value="Phone"
+          />
+          <Badge
+            v-if="$page.props.jetstream.hasPhoneVerification && user.phone_verified_at !== null"
+            class="ml-2 badge-success"
+            value="Verified"
+          />
+          <Badge
+            v-else-if="$page.props.jetstream.hasPhoneVerification && user.phone_verified_at === null"
+            class="ml-2 badge-warning"
+            value="Unverified"
+          />
+        </div>
+        <div class="flex items-center">
+          <span
+            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 mt-1 block p-3 py-2 border rounded-md shadow-sm rounded-e-none border-r-0"
+          >
+            +62
+          </span>
           <TextInput
             id="phone"
             v-model="form.phone"
             type="tel"
-            class="input input-bordered mt-1 block w-full"
+            class="mt-1 block w-full rounded-s-none"
             autocomplete="phone"
+            :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
           />
-        </label>
+        </div>
         <InputError
           :message="form.errors.phone"
           class="mt-2"
         />
+
+        <div v-if="$page.props.jetstream.hasPhoneVerification && user.phone_verified_at === null">
+          <p class="text-sm mt-2 dark:text-white">
+            Your phone number is unverified.
+          </p> 
+
+          <div
+            v-if="verificationOTPSent"
+            class="mt-2"
+          >
+            <OTPInput
+              ref="otpInput"
+              v-model="form.otp"
+              autocomplete="otp"
+              :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
+            />
+            <InputError
+              :message="form.errors.otp"
+              class="mt-2"
+            />
+
+            <p
+              v-if="rateLimit.otp"
+              class="mt-2 font-medium text-sm text-red-600 dark:text-red-400"
+            >
+              You have exceed the OTP Retry limit, please try again later.
+            </p>
+            <div v-else>
+              <p
+                v-if="otpExpired ?? true"
+                class="mt-2 underline text-sm text-white-content hover:text-indigo-500 dark:hover:text-white"
+                :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
+                @click.prevent="sendPhoneVerification"
+              >
+                Click here to re-send the phone number verification OTP.
+              </p>
+              <p
+                v-else
+                class="mt-2 font-medium text-sm text-success"
+              >
+                A new verification OTP has been sent to your phone number. Try again in <span ref="countdown">{{ timer }}</span> second(s).
+              </p>
+            </div>
+          </div>
+
+          <Link
+            v-else
+            href="#"
+            :preserve-state="true"
+            class="mt-2 underline text-sm text-white-content hover:text-indigo-500 dark:hover:text-white"
+            :disabled="!$page.props.auth.user?.permissions.canUpdateProfileInformation"
+            @click.prevent="sendPhoneVerification"
+          >
+            Click here to send the phone number verification OTP.
+          </Link>
+        </div>
       </div>
     </template>
 
