@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Fortify\Featurify as Features;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Laravel\Jetstream\Jetstream;
@@ -33,6 +34,26 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
+            'jetstream' => function () use ($request) {
+                $user = $request->user();
+
+                return [
+                    'canCreateTeams' => $user &&
+                                        Jetstream::userHasTeamFeatures($user) &&
+                                        Gate::forUser($user)->check('create', Jetstream::newTeamModel()),
+                    'canManageTwoFactorAuthentication' => Features::canManageTwoFactorAuthentication(),
+                    'canUpdatePassword' => Features::enabled(Features::updatePasswords()),
+                    'canUpdateProfileInformation' => Features::canUpdateProfileInformation(),
+                    'hasEmailVerification' => Features::enabled(Features::emailVerification()),
+                    'hasPhoneVerification' => Features::enabled(Features::phoneVerification()),
+                    'flash' => $request->session()->get('flash', []),
+                    'hasAccountDeletionFeatures' => Jetstream::hasAccountDeletionFeatures(),
+                    'hasApiFeatures' => Jetstream::hasApiFeatures(),
+                    'hasTeamFeatures' => Jetstream::hasTeamFeatures(),
+                    'hasTermsAndPrivacyPolicyFeature' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+                    'managesProfilePhotos' => Jetstream::managesProfilePhotos(),
+                ];
+            },
             'auth' => [
                 'user' => function () use ($request) {
                     if (! $user = $request->user()) {
@@ -58,6 +79,13 @@ class HandleInertiaRequests extends Middleware
                     ]), [
                         'two_factor_enabled' => ! is_null($user->two_factor_secret),
                     ]);
+                },
+            ],
+            'custom' => [
+                'jetstream' => function () use ($request) {
+                    return [
+                        'hasPhoneVerification' => Features::enabled(Features::phoneVerification()),
+                    ];
                 },
             ],
             'ziggy' => function () use ($request) {

@@ -18,13 +18,37 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
-        Validator::make($input, [
+        $validator = Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone' => ['required', 'digits_between:11,12', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['required', 'digits_between:11,12', 'starts_with:8', Rule::unique('users')->ignore($user->id)],
+            'otp' => ['nullable', 'digits:6'],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
-        ])->validateWithBag('updateProfileInformation');
+        ]);
+        $validator->validateWithBag('updateProfileInformation');
+
+        if ($input['phone'] !== $user->phone) {
+            $this->updateVerifiedPhoneUser($user, $input);
+        }
+
+        if (isset($input['otp'])) {
+            $validator->after(function ($validator) use ($user, $input) {
+                if (!($user->verifyPhoneVerificationOTP($input['otp']))) {
+                    $validator->errors()->add(
+                        'otp',
+                        __('OTP Code is Invalid.')
+                    );
+                }
+                if (!($user->verifyVerificationOTPExpired())) {
+                    $validator->errors()->add(
+                        'otp',
+                        __('OTP Code is Expired.')
+                    );
+                }
+            });
+            $validator->validateWithBag('updateProfileInformation');
+        }
 
         if (isset($input['photo'])) {
             $user->updateProfilePhoto($input['photo']);
@@ -32,40 +56,40 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         if ($input['email'] !== $user->email &&
             $user instanceof MustVerifyEmail) {
-            $this->updateVerifiedUser($user, $input);
-        } else {
-            $user->forceFill([
-                'name' => $input['name'],
-                'username' => $input['username'],
-                'email' => $input['email'],
-                'phone' => $input['phone'],
-            ])->save();
+            $this->updateVerifiedEmailUser($user, $input);
         }
-    }
 
-    /**
-     * Update the given verified user's profile information.
-     *
-     * @param  array<string, string>  $input
-     */
-    protected function updateVerifiedUser(User $user, array $input): void
-    {
         $user->forceFill([
             'name' => $input['name'],
             'username' => $input['username'],
+        ])->save();
+    }
+
+    /**
+     * Update the given verified phone user's profile information.
+     *
+     * @param  array<string, string>  $input
+     */
+    protected function updateVerifiedPhoneUser(User $user, array $input): void
+    {
+        $user->forceFill([
             'phone' => $input['phone'],
-            'phone_verified_at' => $this->phoneVerifiedAt($user, $input),
+            'phone_verified_at' => null,
+        ])->save();
+    }
+
+    /**
+     * Update the given verified email user's profile information.
+     *
+     * @param  array<string, string>  $input
+     */
+    protected function updateVerifiedEmailUser(User $user, array $input): void
+    {
+        $user->forceFill([
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();
 
         $user->sendEmailVerificationNotification();
-    }
-
-    private function phoneVerifiedAt(User $user, array $input) {
-        if ($input['phone'] !== $user->phone) {
-            return null;
-        }
-        return $user->phone_verified_at;
     }
 }
