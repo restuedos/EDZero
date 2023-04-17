@@ -98,17 +98,21 @@ const submit = () => {
           value="Phone"
           class="label"
         />
-        <label class="input-group">
-          <span>+62</span>
+        <div class="flex items-center">
+          <span
+            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 mt-1 block p-3 py-2 border rounded-md shadow-sm rounded-e-none border-r-0"
+          >
+            +62
+          </span>
           <TextInput
             id="phone"
             v-model="form.phone"
             type="tel"
-            class="input input-bordered mt-1 block w-full"
+            class="mt-1 block w-full rounded-s-none"
             required
             autocomplete="phone"
           />
-        </label>
+        </div>
         <InputError
           class="mt-2"
           :message="form.errors.phone"
