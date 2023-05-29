@@ -14,6 +14,15 @@ defineProps({
 
 const showingNavigationDropdown = ref(false);
 
+let darkMode = document.documentElement.classList.contains('dark');
+const switchToDarkMode = (event) => {
+  if (!event.target.checked) {
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
+  }
+}
+
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
         team_id: team.id,
@@ -151,6 +160,15 @@ const logout = () => {
                   </template>
                 </Dropdown>
               </div>
+
+              <input
+                v-if="$page.props.custom.jetstream.hasChangeThemeFeatures"
+                id="toggleDarkMode"
+                type="checkbox"
+                class="toggle focus:toggle checked:bg-none"
+                :checked="darkMode"
+                @click="switchToDarkMode"
+              >
 
               <!-- Settings Dropdown -->
               <div class="ml-3 relative">

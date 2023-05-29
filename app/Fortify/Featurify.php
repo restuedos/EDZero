@@ -15,4 +15,14 @@ class Featurify extends Features
     {
         return 'phone-verification';
     }
+
+    /**
+     * Enable the change theme feature.
+     *
+     * @return string
+     */
+    public static function changeTheme()
+    {
+        return 'change-theme';
+    }
 }
