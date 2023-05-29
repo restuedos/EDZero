@@ -85,6 +85,7 @@ class HandleInertiaRequests extends Middleware
                 'jetstream' => function () use ($request) {
                     return [
                         'hasPhoneVerification' => Features::enabled(Features::phoneVerification()),
+                        'hasChangeThemeFeatures' => Features::enabled(Features::changeTheme()),
                     ];
                 },
             ],
