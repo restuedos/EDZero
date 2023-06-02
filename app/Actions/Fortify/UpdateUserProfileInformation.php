@@ -3,14 +3,10 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
-use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
-use Illuminate\Http\UploadedFile;
 
 class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
@@ -37,13 +33,13 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         if (isset($input['otp'])) {
             $validator->after(function ($validator) use ($user, $input) {
-                if (!($user->verifyPhoneVerificationOTP($input['otp']))) {
+                if (! ($user->verifyPhoneVerificationOTP($input['otp']))) {
                     $validator->errors()->add(
                         'otp',
                         __('OTP Code is Invalid.')
                     );
                 }
-                if (!($user->verifyVerificationOTPExpired())) {
+                if (! ($user->verifyVerificationOTPExpired())) {
                     $validator->errors()->add(
                         'otp',
                         __('OTP Code is Expired.')

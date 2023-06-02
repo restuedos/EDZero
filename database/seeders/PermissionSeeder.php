@@ -26,13 +26,13 @@ class PermissionSeeder extends Seeder
             'canManageTwoFactorAuthentication',
             'canUseAccountDeletionFeatures',
             'canUseTeamFeatures',
-            'canUseApiFeatures'
+            'canUseApiFeatures',
         ]);
 
         $permissions = collect($permissions)->map(function ($permission) {
             return ['name' => $permission, 'guard_name' => 'web'];
         });
-    
+
         Permission::upsert($permissions->toArray(), $permissions->keys());
     }
 }

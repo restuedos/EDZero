@@ -21,7 +21,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Determine the current asset version.
      */
-    public function version(Request $request): string|null
+    public function version(Request $request): ?string
     {
         return parent::version($request);
     }
@@ -70,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                     $userPermissions = $user->getPermissionsViaRoles()->pluck('name');
 
                     $permissions = $availablePermissions->pluck('name')->mapWithKeys(function ($item) use ($user, $userPermissions) {
-                        return [ $item => $userPermissions->contains($item) || $user->hasRole('super_admin') ];
+                        return [$item => $userPermissions->contains($item) || $user->hasRole('super_admin')];
                     });
 
                     return array_merge($user->toArray(), array_filter([
@@ -82,7 +82,7 @@ class HandleInertiaRequests extends Middleware
                 },
             ],
             'custom' => [
-                'jetstream' => function () use ($request) {
+                'jetstream' => function () {
                     return [
                         'hasPhoneVerification' => Features::enabled(Features::phoneVerification()),
                         'hasChangeThemeFeatures' => Features::enabled(Features::changeTheme()),

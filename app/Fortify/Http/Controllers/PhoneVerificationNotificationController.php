@@ -2,17 +2,16 @@
 
 namespace App\Fortify\Http\Controllers;
 
+use App\Fortify\Fortifier as Fortify;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Fortify\Fortifier as Fortify;
 
 class PhoneVerificationNotificationController extends Controller
 {
     /**
      * Send a new phone verification notification.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -26,7 +25,7 @@ class PhoneVerificationNotificationController extends Controller
         if ($request->user()->verificationOTPTooManyAttempts()) {
             return $request->wantsJson()
                     ? new JsonResponse('Too many attempts, please try again later.', 429)
-                    : back()->withErrors([ 'TOO_MANY_REQUESTS' => 'Too many attempts, please try again later.' ]);
+                    : back()->withErrors(['TOO_MANY_REQUESTS' => 'Too many attempts, please try again later.']);
         }
         $request->user()->sendPhoneVerificationNotification();
 

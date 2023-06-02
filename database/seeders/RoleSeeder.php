@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
+use Exception;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
-use Exception;
 
 class RoleSeeder extends Seeder
 {
@@ -22,29 +21,29 @@ class RoleSeeder extends Seeder
 
         $roles = collect([
             [
-                "name"  => "super_admin"
+                'name' => 'super_admin',
             ],
             [
-                "name"  => "admin"
+                'name' => 'admin',
             ],
             [
-                "name"  => "demo"
+                'name' => 'demo',
             ],
             [
-                "name"  => "member"
+                'name' => 'member',
             ],
             [
-                "name"  => "user"
+                'name' => 'user',
             ],
             [
-                "name"  => "guest"
+                'name' => 'guest',
             ],
         ]);
 
         try {
             DB::beginTransaction();
 
-            $roles->each(function($role) {
+            $roles->each(function ($role) {
                 $role = Role::firstOrCreate($role, $role);
 
                 switch ($role->name) {
@@ -60,7 +59,7 @@ class RoleSeeder extends Seeder
                             'canManageTwoFactorAuthentication',
                             'canUseAccountDeletionFeatures',
                             'canUseTeamFeatures',
-                            'canUseApiFeatures'
+                            'canUseApiFeatures',
                         ]);
                         break;
                     case 'demo':
@@ -69,7 +68,7 @@ class RoleSeeder extends Seeder
                             'canViewDashboard',
                             'canViewProfile',
                             'canUseTeamFeatures',
-                            'canUseApiFeatures'
+                            'canUseApiFeatures',
                         ]);
                         break;
                     case 'member':
@@ -82,7 +81,7 @@ class RoleSeeder extends Seeder
                             'canManageTwoFactorAuthentication',
                             'canUseAccountDeletionFeatures',
                             'canUseTeamFeatures',
-                            'canUseApiFeatures'
+                            'canUseApiFeatures',
                         ]);
                     case 'user':
                         $role->givePermissionTo([

@@ -65,7 +65,7 @@ class UserFactory extends Factory
         return $this->has(
             Team::factory()
                 ->state(fn (array $attributes, User $user) => [
-                    'name' => $user->name.'\'s Team',
+                    'name' => $user->name . '\'s Team',
                     'user_id' => $user->id,
                     'personal_team' => true,
                 ])
@@ -82,7 +82,7 @@ class UserFactory extends Factory
         return $this->has(
             Role::factory()
                 ->state(fn (array $attributes, User $user) => [
-                    'name' => $user->name.'\'s Role'
+                    'name' => $user->name . '\'s Role',
                 ])
                 ->when(is_callable($callback), $callback),
             'role'

@@ -1,7 +1,7 @@
 <?php
 
-use App\Providers\RouteServiceProvider;
 use App\Fortify\Featurify as Features;
+use App\Providers\RouteServiceProvider;
 
 return [
 

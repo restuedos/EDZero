@@ -19,17 +19,6 @@ trait MustVerifyPhone
 
         $this->store = Cache::store();
     }
-    
-    /**
-     * Get the key for otp cache.
-     *
-     * @param  string  $key
-     * @return string
-     */
-    protected function keyFor($key): string
-    {
-        return md5(sprintf('%s-%s', 'tzsk-otp', $key));
-    }
 
     /**
      * Determine if the user has verified their phone number.
@@ -66,44 +55,47 @@ trait MustVerifyPhone
     /**
      * Verify the phone number verification OTP.
      *
-     * @param mixed $otp
+     * @param  mixed  $otp
      * @return void
      */
     public function verifyPhoneVerificationOTP($otp)
     {
-        if(Otp::match($otp, ((string) $this->phone) . '-code') || (App::environment('local') && $otp == '123456')) {
+        if (Otp::match($otp, ((string) $this->phone) . '-code') || (App::environment('local') && $otp == '123456')) {
             Cache::flush();
-            
+
             return $this->markPhoneAsVerified();
         }
+
         return false;
     }
-    
-    /**
-    * Check if verification OTP has too many attempts
-    *
-    * @param mixed $otp
-    * @return void
-    */
-   public function verificationOTPTooManyAttempts()
-   {
-       $attempt = $this->store->get($this->keyFor((string) $this->phone) . '-attempt');
-       return $attempt > 3;
-   }
 
-   /**
-    * Verify the verification OTP expired.
-    * Check if verification OTP is expired
+    /**
+     * Check if verification OTP has too many attempts
+     *
+     * @param  mixed  $otp
+     * @return void
+     */
+    public function verificationOTPTooManyAttempts()
+    {
+        $attempt = $this->store->get($this->keyFor((string) $this->phone) . '-attempt');
+
+        return $attempt > 3;
+    }
+
+    /**
+     * Verify the verification OTP expired.
+     * Check if verification OTP is expired
 
     /**
      * Check if verification OTP is expired
      *
-     * @param mixed $otp
+     * @param  mixed  $otp
      * @return void
      */
     public function verifyVerificationOTPExpired()
     {
         $expiryTime = $this->store->get($this->keyFor((string) $this->phone) . '-expiryTime');
+
         return Carbon::parse($expiryTime)->isPast();
     }
 
@@ -115,5 +107,15 @@ trait MustVerifyPhone
     public function getPhoneForVerification()
     {
         return $this->phone;
+    }
+
+    /**
+     * Get the key for otp cache.
+     *
+     * @param  string  $key
+     */
+    protected function keyFor($key): string
+    {
+        return md5(sprintf('%s-%s', 'tzsk-otp', $key));
     }
 }
