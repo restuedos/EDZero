@@ -3,10 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
-use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
