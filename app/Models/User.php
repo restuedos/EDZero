@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Auth\MustVerifyPhone;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
@@ -23,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasTeams;
     use MustVerifyPhone;
     use Notifiable;
+    use SoftDeletes;
     use TwoFactorAuthenticatable;
 
     /**

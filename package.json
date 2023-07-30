@@ -25,5 +25,9 @@
         "vite": "^4.0.0",
         "vue": "^3.2.31",
         "vue3-otp-input": "^0.4.1"
+    },
+    "dependencies": {
+        "@heroicons/vue": "^2.0.18",
+        "laravel-precognition-vue-inertia": "^0.3.2"
     }
 }

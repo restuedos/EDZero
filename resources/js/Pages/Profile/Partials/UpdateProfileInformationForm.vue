@@ -5,7 +5,7 @@ import ActionMessage from '@/Components/ActionMessage.vue';
 import FormSection from '@/Components/FormSection.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import Badge from '@/Components/Badge.vue';
+import ConditionalBadge from '@/Components/ConditionalBadge.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -33,9 +33,10 @@ const verificationLinkSent = ref(null);
 const verificationOTPSent = ref(null);
 const otpRetry = ref(null);
 const otpExpired = ref(null);
-const timer = ref(null);
 const otpInput = ref(null);
+const timer = ref(null);
 const countdown = ref(null);
+const counter = ref(null);
 const photoPreview = ref(null);
 const photoInput = ref(null);
 
@@ -51,6 +52,11 @@ const updateProfileInformation = () => {
           clearPhotoFileInput();
           clearOTPInput();
         },
+        onErrors: (errors) => {
+          errors.each( (err) => {
+            console.log(err);
+          });
+        }
     });
 };
 
@@ -92,24 +98,27 @@ const requestOTP = () => {
         },
         preserveScroll: true,
         onError: (errors) => {
-            console.log(errors);
+            if (errors.TOO_MANY_REQUESTS) {
+              form.errors.otp = errors.TOO_MANY_REQUESTS;
+              rateLimit.value.otp = true;
+            }
         },
     });
 };
 
 const startCountdown = () => {
   let count = timer.value;
-  let interval = setInterval(() => {
+  counter.value = setInterval(() => {
     if (count === 0) {
       otpExpired.value = true;
-      clearInterval(interval);
+      clearInterval(counter.value);
     } else {
       if (countdown?.value) {
         countdown.value.innerText = count;
       }
       count--;
     }
-  }, 1000)
+  }, 1000);
 }
 
 const selectNewPhoto = () => {
@@ -147,6 +156,15 @@ const clearPhotoFileInput = () => {
 };
 
 const clearOTPInput = () => {
+    verificationOTPSent.value = false;
+    otpExpired.value = false;
+    rateLimit.value.otp = false;
+    otpRetry.value = 0;
+    timer.value = 0;
+    clearInterval(counter.value);
+
+    otpInput.value?.clearInput();  
+
     if (form.otp !== null) {
         form.otp = null;
     }
@@ -259,15 +277,11 @@ const clearOTPInput = () => {
             for="email"
             value="Email"
           />
-          <Badge
-            v-if="$page.props.jetstream.hasEmailVerification && user.email_verified_at !== null"
-            class="ml-2 badge-success"
-            value="Verified"
-          />
-          <Badge
-            v-else-if="$page.props.jetstream.hasEmailVerification && user.email_verified_at === null"
-            class="ml-2 badge-warning"
-            value="Unverified"
+          <ConditionalBadge
+            v-if="$page.props.jetstream.hasEmailVerification"
+            :condition="user.email_verified_at !== null"
+            value-true="Verified"
+            value-false="Unverified"
           />
         </div>
         <TextInput
@@ -335,15 +349,11 @@ const clearOTPInput = () => {
             for="phone"
             value="Phone"
           />
-          <Badge
-            v-if="$page.props.jetstream.hasPhoneVerification && user.phone_verified_at !== null"
-            class="ml-2 badge-success"
-            value="Verified"
-          />
-          <Badge
-            v-else-if="$page.props.jetstream.hasPhoneVerification && user.phone_verified_at === null"
-            class="ml-2 badge-warning"
-            value="Unverified"
+          <ConditionalBadge
+            v-if="$page.props.jetstream.hasPhoneVerification"
+            :condition="user.phone_verified_at !== null"
+            value-true="Verified"
+            value-false="Unverified"
           />
         </div>
         <div class="flex items-center">

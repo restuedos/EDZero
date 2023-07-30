@@ -1,11 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Fortify\Featurify as Features;
 use App\Fortify\Http\Controllers\PhoneVerificationNotificationController;
 use App\Fortify\Http\Controllers\PhoneVerificationPromptController;
+use App\Http\Controllers\UsersController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,8 +32,13 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
+    HandlePrecognitiveRequests::class,
+])->group(function (): void {
+    Route::resource('users', UsersController::class);
+
+    Route::patch('users/{id}/restore', [UsersController::class, 'restore'])->name('users.restore');
+
+    Route::get('dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 });
@@ -46,13 +52,13 @@ Route::group(['middleware' => config('fortify.middleware', ['web'])], function (
     // Phone Verification...
     if (Features::enabled(Features::phoneVerification())) {
         if ($enableViews) {
-            Route::get('/phone/verify', [PhoneVerificationPromptController::class, '__invoke'])
-                ->middleware([config('fortify.auth_middleware', 'auth').':'.config('fortify.guard')])
+            Route::get('phone/verify', [PhoneVerificationPromptController::class, '__invoke'])
+                ->middleware([config('fortify.auth_middleware', 'auth') . ':' . config('fortify.guard')])
                 ->name('verification.phone.notice');
         }
 
-        Route::post('/phone/verification-notification', [PhoneVerificationNotificationController::class, 'store'])
-            ->middleware([config('fortify.auth_middleware', 'auth').':'.config('fortify.guard'), 'throttle:'.$verificationLimiter])
+        Route::post('phone/verification-notification', [PhoneVerificationNotificationController::class, 'store'])
+            ->middleware([config('fortify.auth_middleware', 'auth') . ':' . config('fortify.guard'), 'throttle:' . $verificationLimiter])
             ->name('verification.phone.send');
     }
 });

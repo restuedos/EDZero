@@ -4,49 +4,99 @@ namespace App\Notifications;
 
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use Closure;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Notifications\Channels\VonageSmsChannel;
 use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
+use Log;
 use Tzsk\Otp\Facades\Otp;
 
 class VerifyPhone extends Notification
 {
     use Queueable;
 
+    /**
+     * The callback that should be used to create the OTP.
+     */
+    protected static ?Closure $createOTPCallback = null;
+
+    /**
+     * The callback that should be used to build the Vonage message.
+     */
+    protected static ?Closure $toVonageCallback = null;
+
     protected Repository $store;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    protected function __construct()
     {
         $this->store = Cache::store();
     }
 
     /**
-     * The callback that should be used to create the OTP.
-     *
-     * @var \Closure|null
+     * Set a callback that should be used when creating the OTP.
      */
-    public static $createOTPCallback;
+    protected static function createOTPUsing(Closure $callback)
+    {
+        static::$createOTPCallback = $callback;
+    }
 
     /**
-     * The callback that should be used to build the Vonage message.
-     *
-     * @var \Closure|null
+     * Set a callback that should be used when building the notification Vonage message.
      */
-    public static $toVonageCallback;
+    protected static function toVonageUsing(Closure $callback)
+    {
+        static::$toVonageCallback = $callback;
+    }
+
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<int, string>
+     */
+    protected function via(object $notifiable)
+    {
+        return [VonageSmsChannel::class];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    protected function toVonage(object $notifiable)
+    {
+        $otp = $this->verificationOTP($notifiable);
+
+        if (static::$toVonageCallback) {
+            return call_user_func(static::$toVonageCallback, $notifiable, $otp);
+        }
+        $this->getAttempt($notifiable);
+
+        Log::debug(print_r(json_encode($otp), true));
+
+        return $this->buildVonageMessage($notifiable, $otp);
+    }
+
+    /**
+     * Get the array representation of the notification.
+     *
+     * @return array<string, mixed>
+     */
+    protected function toArray(object $notifiable)
+    {
+        return [
+
+        ];
+    }
 
     /**
      * Get the key for otp cache.
-     *
-     * @param  string  $key
-     * @return string
      */
-    protected function keyFor($key): string
+    protected function keyFor(string $key)
     {
         return md5(sprintf('%s-%s', 'tzsk-otp', $key));
     }
@@ -54,7 +104,7 @@ class VerifyPhone extends Notification
     protected function getExpiry($notifiable)
     {
         $attempt = $this->store->get($this->keyFor((string) $notifiable->phone) . '-attempt');
-        if (empty($attempt)) {
+        if (is_null($attempt)) {
             $attempt = 1;
         }
 
@@ -76,21 +126,19 @@ class VerifyPhone extends Notification
 
         return $expiry;
     }
-    
+
     protected function getExpiryTime($notifiable)
     {
-        $expiryTime = $this->store->get($this->keyFor((string) $notifiable->phone) . '-expiryTime');
-
-        return $expiryTime;
+        return $this->store->get($this->keyFor((string) $notifiable->phone) . '-expiryTime');
     }
 
     protected function getAttempt($notifiable)
     {
         $attempt = $this->store->get($this->keyFor((string) $notifiable->phone) . '-attempt');
-        if (empty($attempt) || $attempt > 3) {
+        if (is_null($attempt) || $attempt > 3) {
             $attempt = 0;
         }
-        
+
         $attempt++;
 
         $this->store->put($this->keyFor((string) $notifiable->phone) . '-attempt', $attempt, CarbonInterval::hour()->totalSeconds);
@@ -99,39 +147,9 @@ class VerifyPhone extends Notification
     }
 
     /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return [ VonageSmsChannel::class ];
-    }
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toVonage(object $notifiable): VonageMessage
-    {
-        $otp = $this->verificationOTP($notifiable);
-
-        if (static::$toVonageCallback) {
-            return call_user_func(static::$toVonageCallback, $notifiable, $otp);
-        }
-        $this->getAttempt($notifiable);
-
-        \Log::debug(print_r(json_encode($otp), true));
-        
-        return $this->buildVonageMessage($notifiable, $otp);
-    }
-
-    /**
      * Get the verify phone notification Vonage message for the given URL.
-     *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\VonageMessage
      */
-    protected function buildVonageMessage($notifiable, $otp)
+    protected function buildVonageMessage(mixed $notifiable, $otp)
     {
         return (new VonageMessage)
             ->clientReference((string) $notifiable->id)
@@ -140,51 +158,15 @@ class VerifyPhone extends Notification
 
     /**
      * Get the verification OTP for the given notifiable.
-     *
-     * @param  mixed  $notifiable
-     * @return string
      */
-    protected function verificationOTP($notifiable)
+    protected function verificationOTP(mixed $notifiable)
     {
         if (static::$createOTPCallback) {
             return call_user_func(static::$createOTPCallback, $notifiable);
         }
 
         $expiry = $this->getExpiry($notifiable);
+
         return Otp::expiry($expiry)->make(((string) $notifiable->phone) . '-code');
-    }
-
-    /**
-     * Set a callback that should be used when creating the OTP.
-     *
-     * @param  \Closure  $callback
-     * @return void
-     */
-    public static function createOTPUsing($callback)
-    {
-        static::$createOTPCallback = $callback;
-    }
-
-    /**
-     * Set a callback that should be used when building the notification Vonage message.
-     *
-     * @param  \Closure  $callback
-     * @return void
-     */
-    public static function toVonageUsing($callback)
-    {
-        static::$toVonageCallback = $callback;
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            //
-        ];
     }
 }
