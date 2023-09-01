@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import Checkbox from '@/Components/Checkbox.vue';
@@ -16,8 +17,13 @@ defineProps({
 const form = useForm({
     username: '',
     password: '',
+    showPassword: false,
     remember: false,
 });
+
+const toggleShowPassword = () => {
+  form.showPassword = !form.showPassword;
+};
 
 const submit = () => {
     form.transform(data => ({
@@ -70,14 +76,29 @@ const submit = () => {
           for="password"
           value="Password"
         />
-        <TextInput
-          id="password"
-          v-model="form.password"
-          type="password"
-          class="mt-1 block w-full"
-          required
-          autocomplete="current-password"
-        />
+        <div class="flex items-center">
+          <TextInput
+            id="password"
+            v-model="form.password"
+            :type="form.showPassword ? 'text' : 'password'"
+            class="mt-1 block w-full rounded-e-none border-r-0 peer"
+            required
+            autocomplete="current-password"
+          />
+          <span
+            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 peer-focus:border-indigo-500 dark:peer-focus:border-indigo-600 peer-focus:ring-indigo-500 dark:peer-focus:ring-indigo-600 mt-1 block p-3 py-2 border peer-focus:border-2 rounded-md shadow-sm rounded-s-none border-l-0 peer-focus:border-l-0"
+            @click="toggleShowPassword"
+          >
+            <EyeIcon
+              v-if="form.showPassword"
+              class="w-6 h-6 stroke-current hover:stroke-indigo-500"
+            />
+            <EyeSlashIcon
+              v-else
+              class="w-6 h-6 stroke-current hover:stroke-indigo-500"
+            />
+          </span>
+        </div>
         <InputError
           class="mt-2"
           :message="form.errors.password"

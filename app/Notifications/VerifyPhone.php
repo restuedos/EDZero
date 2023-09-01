@@ -11,7 +11,7 @@ use Illuminate\Notifications\Channels\VonageSmsChannel;
 use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
-use Log;
+use Illuminate\Support\Facades\Log;
 use Tzsk\Otp\Facades\Otp;
 
 class VerifyPhone extends Notification

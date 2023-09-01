@@ -32,8 +32,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
-    HandlePrecognitiveRequests::class,
-])->group(function (): void {
+])->group(function () {
     Route::resource('users', UsersController::class);
 
     Route::patch('users/{id}/restore', [UsersController::class, 'restore'])->name('users.restore');

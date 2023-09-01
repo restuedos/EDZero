@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm } from 'laravel-precognition-vue-inertia';
+import { useForm } from '@inertiajs/vue3';
 import { TrashIcon, PencilIcon, ArrowPathIcon } from '@heroicons/vue/24/outline';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ConditionalBadge from '@/Components/ConditionalBadge.vue';
